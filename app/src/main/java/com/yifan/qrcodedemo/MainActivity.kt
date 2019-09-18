@@ -42,11 +42,7 @@ class MainActivity : AbstractScannerActivity() {
 
             }
             .onDenied { permissions ->
-                if (AndPermission.hasAlwaysDeniedPermission(
-                        this@MainActivity,
-                        permissions
-                    )
-                ) {
+                if (AndPermission.hasAlwaysDeniedPermission(this@MainActivity, permissions)) {
 
                 }
             }.start()
@@ -89,6 +85,8 @@ class MainActivity : AbstractScannerActivity() {
             }
             scannerHandler.characterSet = intent.getStringExtra(Intents.Scan.CHARACTER_SET)
         }
+
+        mBinding.vfvScan.setCameraManager(scannerHandler.getCameraManager())
     }
 
     /**
@@ -108,8 +106,13 @@ class MainActivity : AbstractScannerActivity() {
 
     override fun onResume() {
         super.onResume()
-
+        //TODO 监听生命周期
         scannerHandler.resume(mBinding.svCamera.holder)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        scannerHandler.pause()
     }
 
 }

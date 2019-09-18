@@ -7,12 +7,13 @@ import android.graphics.Bitmap
 import android.os.Handler
 import com.google.zxing.Result
 import com.yifan.scanner.lib.camera.CameraManager
+import com.yifan.scanner.lib.camera.CaptureActivityHandler
 
 interface ScannerHandler {
 
     fun getCameraManager(): CameraManager
 
-    fun getHandler(): Handler
+    fun getHandler(): CaptureActivityHandler?
 
     fun getContext(): Context
 

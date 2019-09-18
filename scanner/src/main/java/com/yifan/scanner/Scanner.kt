@@ -19,6 +19,8 @@ import com.yifan.scanner.lib.camera.CameraManager
 import com.yifan.scanner.lib.camera.CaptureActivityHandler
 import java.io.IOException
 import java.util.*
+import android.content.res.TypedArray
+
 
 class Scanner(
     private val context: Context,
@@ -26,20 +28,54 @@ class Scanner(
 ) : ScannerHandler,
     SurfaceHolder.Callback {
 
+    /**
+     * 标记SurfaceView是否初始化完毕
+     */
     var hasSurface = false
 
+    /**
+     * 画布holder
+     */
+    var surfaceHolder: SurfaceHolder? = null
+
+    /**
+     * ZXing提取的相机管理类
+     */
     private var cameraManager: CameraManager
 
-    lateinit var handler: CaptureActivityHandler
+    /**
+     * 解析用的Handler包装类
+     */
+    private var handler: CaptureActivityHandler? = null
 
+    /**
+     * 是否保留结果用于展示
+     */
     var savedResultToShow: Result? = null
 
+    /**
+     * 识别方式
+     */
     var decodeFormats: EnumSet<BarcodeFormat>? = null
     var decodeHints: EnumMap<DecodeHintType, Any>? = null
+    /**
+     * 文本编码
+     */
     var characterSet: String? = null
 
     init {
         cameraManager = CameraManager(context)
+//        val width = context.applicationContext.resources.displayMetrics.widthPixels / 2
+//        cameraManager.setManualFramingRect(width, width)
+
+        //顶部偏移量
+//        val actionbarSizeTypedArray =
+//            context.obtainStyledAttributes(intArrayOf(android.R.attr.actionBarSize))
+//        val h = actionbarSizeTypedArray.getDimension(0, 0f)
+//        val actionBarHeight = h.toInt()
+//
+//        Log.d(TAG, "topOffset: " + actionBarHeight)
+//        cameraManager.setCustomTopOffset(actionBarHeight)
     }
 
     companion object {
@@ -50,7 +86,7 @@ class Scanner(
         return cameraManager;
     }
 
-    override fun getHandler(): Handler {
+    override fun getHandler(): CaptureActivityHandler? {
         return handler
     }
 
@@ -83,7 +119,6 @@ class Scanner(
         if (context is AppCompatActivity) {
             context.startActivity(intent)
         }
-
     }
 
     override fun getViewfinderView(): ViewfinderView {
@@ -121,7 +156,18 @@ class Scanner(
         }
     }
 
+    fun pause() {
+        cameraManager.closeDriver();
+        if (hasSurface) {
+            hasSurface = false
+            surfaceHolder?.removeCallback(this)
+            surfaceHolder = null
+        }
+    }
 
+    /**
+     * 初始化相机及画布
+     */
     fun initCamera(
         surfaceHolder: SurfaceHolder,
         characterSet: String?,
@@ -146,7 +192,7 @@ class Scanner(
                 this,
                 decodeFormats,
                 decodeHints,
-                characterSet!!,
+                characterSet ?: "",
                 cameraManager
             )
             decodeOrStoreSavedBitmap(null, null)
@@ -191,7 +237,7 @@ class Scanner(
             }
             if (savedResultToShow != null) {
                 val message = Message.obtain(handler, R.id.decode_succeeded, savedResultToShow)
-                handler.sendMessage(message)
+                handler?.sendMessage(message)
             }
             savedResultToShow = null
         }
